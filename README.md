@@ -46,6 +46,7 @@ sudo apt install libmpc-dev
 sudo apt install libmpfr-dev
 sudo apt install xorriso
 sudo apt install qemu-system-x86
+sudo apt install grub-pc-bin
 ```
 
 ### GCC
@@ -125,17 +126,17 @@ You can now assemble boot.s and compile kernel.c. This produces two object files
 
 You can then link your kernel using:
 ```
-i686-elf-gcc -T linker.ld -o darmorOS.bin -ffreestanding -O2 -nostdlib boot.o kernel.o -lgcc
+i686-elf-gcc -T linker.ld -o darmoros.bin -ffreestanding -O2 -nostdlib boot.o kernel.o -lgcc
 ```
 
 ### VERIFYING MULTIBOOT
 If you have GRUB installed, you can check whether a file has a valid Multiboot version 1 header, which is the case for your kernel. It's important that the Multiboot header is within the first 8 KiB of the actual program file at 4 byte alignment. This can potentially break later if you make a mistake in the boot assembly, the linker script, or anything else that might go wrong. If the header isn't valid, GRUB will give an error that it can't find a Multiboot header when you try to boot it. This code fragment will help you diagnose such cases:
 ```
-grub-file --is-x86-multiboot darmorOS.bin
+grub-file --is-x86-multiboot darmoros.bin
 ```
 Wrap command with conditional for output.
 ```
-if grub-file --is-x86-multiboot darmorOS.bin; then
+if grub-file --is-x86-multiboot darmoros.bin; then
   echo multiboot confirmed
 else
   echo the file is not multiboot
@@ -146,20 +147,32 @@ fi
 #### BUILDING A BOOTABLE CDROM IMAGE
 You can easily create a bootable CD-ROM image containing the GRUB bootloader and your kernel using the program grub-mkrescue. First you should create a file called grub.cfg containing the contents:
 ```
-menuentry "darmorOS" {
-	multiboot /boot/darmorOS.bin
+menuentry "darmoros" {
+	multiboot /boot/darmoros.bin
 }
 ```
 You can now create a bootable image of your operating system by typing these commands:
 ```
 mkdir -p isodir/boot/grub
-cp darmorOS.bin isodir/boot/darmorOS.bin
+cp darmoros.bin isodir/boot/darmoros.bin
 cp grub.cfg isodir/boot/grub/grub.cfg
-grub-mkrescue -o darmorOS.iso isodir
+grub-mkrescue -o darmoros.iso isodir
 ```
 
 ### TESTING THE OPERATING SYSTEM (QEMU)
 Start the operating system with:
 ```
 qemu-system-i386 -cdrom myos.iso
+```
+
+#### CREAT BUILD SCRIPTS
+```
+sudo chmod +x build.sh
+sudo chmod +x clean.sh
+sudo chmod +x config.sh
+sudo chmod +x default-host.sh
+sudo chmod +x headers.sh
+sudo chmod +x target-triplet-to-arch.sh
+sudo chmod +x iso.sh
+sudo chmod +x qemu.sh
 ```
