@@ -44,6 +44,8 @@ make install
 sudo apt install libgmp3-dev
 sudo apt install libmpc-dev
 sudo apt install libmpfr-dev
+sudo apt install xorriso
+sudo apt install qemu-system-x86
 ```
 
 ### GCC
@@ -92,3 +94,72 @@ export PATH="$HOME/opt/cross/bin:$PATH"
 This command will add your new compiler to your PATH for this shell session. If you wish to use it permanently, add the PATH command to your ~/.profile configuration shell script or similar. Consult your shell documentation for more information.
 
 You can now move on to complete the Bare Bones tutorial variant that lead you here and complete it using your new cross-compiler. If you built a new GCC version as your system compiler and used it to build the cross-compiler, you can now safely uninstall it unless you wish to continue using it.
+
+### OVERVIEW
+boot.s - kernel entry point that sets up the processor environment   
+kernel.c - your actual kernel routines   
+linker.ld - for linking the above files
+
+### BOOTING THE OPERATING SYSTEM
+To start the operating system, an existing piece of software will be needed to load it. This is called the bootloader and in this tutorial you will be using GRUB. Writing your own bootloader is an advanced subject, but it is commonly done. We'll later configure the bootloader, but the operating system needs to handle when the bootloader passes control to it. The kernel is passed a very minimal environment, in which the stack is not set up yet, virtual memory is not yet enabled, hardware is not initialized, and so on.
+
+The first task you will deal with is how the bootloader starts the kernel. OSDevers are lucky because there exists a Multiboot Standard, which describes an easy interface between the bootloader and the operating system kernel. It works by putting a few magic values in some global variables (known as a multiboot header), which is searched for by the bootloader. When it sees these values, it recognizes the kernel as multiboot compatible and it knows how to load us, and it can even forward us important information such as memory maps, but you won't need that yet.
+
+Since there is no stack yet and you need to make sure the global variables are set correctly, you will do this in assembly.
+
+#### BOOTSTRAP ASSEMBLY
+You can then assemble boot.s using:
+```
+i686-elf-as boot.s -o boot.o
+```
+
+### IMPLEMENTING THE KERNEL
+Compile using:
+```
+i686-elf-gcc -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+```
+Note that the above code uses a few extensions and hence you build as the GNU version of C99.
+
+### LINKING THE KERNEL
+You can now assemble boot.s and compile kernel.c. This produces two object files that each contain part of the kernel. To create the full and final kernel you will have to link these object files into the final kernel program, usable by the bootloader. When developing user-space programs, your toolchain ships with default scripts for linking such programs. However, these are unsuitable for kernel development and you need to provide your own customized linker script. Save the following in linker.ld:
+
+You can then link your kernel using:
+```
+i686-elf-gcc -T linker.ld -o darmorOS.bin -ffreestanding -O2 -nostdlib boot.o kernel.o -lgcc
+```
+
+### VERIFYING MULTIBOOT
+If you have GRUB installed, you can check whether a file has a valid Multiboot version 1 header, which is the case for your kernel. It's important that the Multiboot header is within the first 8 KiB of the actual program file at 4 byte alignment. This can potentially break later if you make a mistake in the boot assembly, the linker script, or anything else that might go wrong. If the header isn't valid, GRUB will give an error that it can't find a Multiboot header when you try to boot it. This code fragment will help you diagnose such cases:
+```
+grub-file --is-x86-multiboot darmorOS.bin
+```
+Wrap command with conditional for output.
+```
+if grub-file --is-x86-multiboot darmorOS.bin; then
+  echo multiboot confirmed
+else
+  echo the file is not multiboot
+fi
+```
+
+### BOOTING THE KERNEL
+#### BUILDING A BOOTABLE CDROM IMAGE
+You can easily create a bootable CD-ROM image containing the GRUB bootloader and your kernel using the program grub-mkrescue. First you should create a file called grub.cfg containing the contents:
+```
+menuentry "darmorOS" {
+	multiboot /boot/darmorOS.bin
+}
+```
+You can now create a bootable image of your operating system by typing these commands:
+```
+mkdir -p isodir/boot/grub
+cp darmorOS.bin isodir/boot/darmorOS.bin
+cp grub.cfg isodir/boot/grub/grub.cfg
+grub-mkrescue -o darmorOS.iso isodir
+```
+
+### TESTING THE OPERATING SYSTEM (QEMU)
+Start the operating system with:
+```
+qemu-system-i386 -cdrom myos.iso
+```
