@@ -1,0 +1,4 @@
+# Commit the directory, but not the contents. Too big, and will likely be updated often.
+*
+*/
+!.gitignore
