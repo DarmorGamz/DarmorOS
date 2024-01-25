@@ -15,9 +15,19 @@ EOF
 
 # Create grub.cfg that will be used when executing grub-mkrescue
 cp sysroot/boot/darmoros.kernel isodir/boot/darmoros.kernel
+cp sysroot/boot/darmoros.bin isodir/boot/darmoros.bin
 cat > isodir/boot/grub/grub.cfg << EOF
-menuentry "darmoros" {
-	multiboot /boot/darmoros.kernel
+menuentry "darmoros (kernel)" {
+    multiboot /boot/darmoros.kernel
+}
+
+menuentry "darmoros (bin)" {
+    multiboot /boot/darmoros.bin
 }
 EOF
-grub-mkrescue -o darmoros.iso isodir
+
+# Create the build directory if it doesn't exist.
+mkdir -p build/
+
+# Create .iso and .bin
+grub-mkrescue -o build/darmoros.iso isodir

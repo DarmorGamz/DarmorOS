@@ -42,12 +42,16 @@ $(LIBS) \
 $(ARCHDIR)/crtend.o \
 $(ARCHDIR)/crtn.o \
 
-.PHONY: all clean install install-headers install-kernel
+.PHONY: all clean install install-headers install-kernel install-bin
 .SUFFIXES: .o .c .S
 
-all: darmoros.kernel
+all: darmoros.kernel darmoros.bin
 
 darmoros.kernel: $(OBJS) $(ARCHDIR)/linker.ld
+	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST)
+	grub-file --is-x86-multiboot darmoros.kernel
+
+darmoros.bin: $(OBJS) $(ARCHDIR)/linker.ld
 	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST)
 	grub-file --is-x86-multiboot darmoros.kernel
 
@@ -65,7 +69,7 @@ clean:
 	rm -f $(OBJS) *.o */*.o */*/*.o
 	rm -f $(OBJS:.o=.d) *.d */*.d */*/*.d
 
-install: install-headers install-kernel
+install: install-headers install-kernel install-bin
 
 install-headers:
 	mkdir -p $(DESTDIR)$(INCLUDEDIR)
@@ -74,5 +78,10 @@ install-headers:
 install-kernel: darmoros.kernel
 	mkdir -p $(DESTDIR)$(BOOTDIR)
 	cp darmoros.kernel $(DESTDIR)$(BOOTDIR)
+
+install-bin: darmoros.bin
+	mkdir -p $(DESTDIR)$(BOOTDIR)
+	cp darmoros.bin $(DESTDIR)$(BOOTDIR)
+
 
 -include $(OBJS:.o=.d)
