@@ -162,7 +162,7 @@ grub-mkrescue -o darmoros.iso isodir
 ### TESTING THE OPERATING SYSTEM (QEMU)
 Start the operating system with:
 ```
-qemu-system-i386 -cdrom myos.iso
+qemu-system-i386 -cdrom darmoros.iso
 ```
 
 #### CREAT BUILD SCRIPTS
@@ -175,4 +175,5 @@ sudo chmod +x headers.sh
 sudo chmod +x target-triplet-to-arch.sh
 sudo chmod +x iso.sh
 sudo chmod +x qemu.sh
+sudo chmod +x lazy-build-qemu.sh
 ```
