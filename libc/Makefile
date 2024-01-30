@@ -33,6 +33,8 @@ string/strlen.o \
 stdio/printf.o \
 stdio/sprintf.o \
 stdio/putchar.o \
+io/inb.o \
+io/outb.o \
 # stdio/puts.o \
 # stdlib/abort.o \
 # string/memcmp.o \

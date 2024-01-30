@@ -6,6 +6,7 @@
 #include <string.h>
 
 int _int2base(int value, int base);
+int _long2base(long value, int base);
 
 static const char* digits = "0123456789abcdefghijklmnopqrstuvwxyz";
 
@@ -75,6 +76,14 @@ int printf(const char* restrict format, ...) {
 				return -1;
 			}
 			written += _int2base(d, 10);
+		} else if (*format == 'u') {
+			format++;
+			long l = va_arg(parameters, long);
+			if (!maxrem) {
+				// TODO: Set errno to EOVERFLOW.
+				return -1;
+			}
+			written += _int2base(l, 10);
 		} else {
 			format = format_begun_at;
 			size_t len = strlen(format);
@@ -94,6 +103,15 @@ int printf(const char* restrict format, ...) {
 }
 
 int _int2base(int value, int base) {
+	static int dCount = 0;
+    if ((value / base) != 0) {
+        _int2base(value / base, base);
+    }
+    putchar(digits[value % base]);
+	return ++dCount;
+}
+
+int _long2base(long value, int base) {
 	static int dCount = 0;
     if ((value / base) != 0) {
         _int2base(value / base, base);

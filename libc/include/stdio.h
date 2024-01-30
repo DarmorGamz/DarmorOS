@@ -6,8 +6,8 @@
 extern "C" {
 #endif
 int printf(const char* __restrict, ...);
+int sprintf(char*, const char*, ...);
 int putchar(int);
-int puts(const char*);
 #ifdef __cplusplus
 }
 #endif
