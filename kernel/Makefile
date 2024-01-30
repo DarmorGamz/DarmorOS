@@ -48,7 +48,7 @@ $(ARCHDIR)/crtend.o \
 $(ARCHDIR)/crtn.o \
 
 .PHONY: all clean install install-headers install-kernel install-bin
-.SUFFIXES: .o .c .S
+.SUFFIXES: .o .c .S .asm
 
 all: darmoros.kernel darmoros.bin
 
@@ -69,6 +69,9 @@ $(ARCHDIR)/crtbegin.o $(ARCHDIR)/crtend.o:
 .S.o:
 	$(CC) -MD -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
+.asm.o:
+	$(CC) -MD -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
+
 clean:
 	rm -f darmoros.kernel
 	rm -f $(OBJS) *.o */*.o */*/*.o
@@ -83,10 +86,12 @@ install-headers:
 install-kernel: darmoros.kernel
 	mkdir -p $(DESTDIR)$(BOOTDIR)
 	cp darmoros.kernel $(DESTDIR)$(BOOTDIR)
+	rm darmoros.kernel
 
 install-bin: darmoros.bin
 	mkdir -p $(DESTDIR)$(BOOTDIR)
 	cp darmoros.bin $(DESTDIR)$(BOOTDIR)
+	rm darmoros.bin
 
 
 -include $(OBJS:.o=.d)
